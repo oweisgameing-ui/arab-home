@@ -5569,6 +5569,33 @@
                 image-rendering: crisp-edges;
             }
         }
+        /* إخفاء شريط التمرير في القائمة على الهواتف */
+        @media (max-width: 768px) {
+            .main-nav {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            
+            .main-nav::-webkit-scrollbar {
+                display: none;
+            }
+        }
+        /* جعل الهيدر ثابتاً على الهواتف */
+        @media (max-width: 768px) {
+            .main-header {
+                position: sticky;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 1000;
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            body {
+                padding-top: 70px; /* تعويض للهيدر الثابت */
+            }
+        }
     </style>
 </head>
 <body>
