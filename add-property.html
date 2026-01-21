@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="إضافة عقار جديد - ARAB HOME">
+    <title>إضافة عقار جديد | ARAB HOME</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS (UMD) - استبدل المفاتيح أدناه بقيم مشروعك -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+        <!-- تهيئة authSystem مبكراً -->
+        <script>
+            // تهيئة authSystem مبكراً
+            window.authSystem = {
+                currentUser: null,
+                isLoggedIn: function() {
+                    return this.currentUser !== null;
+                },
+                showLoginModal: function() {
+                    const overlay = document.getElementById('loginOverlay');
+                    if (overlay) overlay.classList.add('active');
+                },
+                saveUserData: function(data) {
+                    try {
+                        localStorage.setItem('arabHomeUser', JSON.stringify(data));
+                        this.currentUser = data;
+                    } catch(e) {
+                        console.warn('Error saving user data:', e);
+                    }
+                },
+                updateUI: function() {
+                    const welcome = document.getElementById('userWelcome');
+                    const loginBtn = document.getElementById('loginHeaderBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+
+                    if (this.currentUser) {
+                        if (welcome) welcome.textContent = `مرحباً، ${this.currentUser.name || this.currentUser.email.split('@')[0]}!`;
+                        if (loginBtn) loginBtn.style.display = 'none';
+                        if (logoutBtn) logoutBtn.style.display = 'block';
+                    } else {
+                        if (welcome) welcome.textContent = 'مرحباً بك في ARAB HOME';
+                        if (loginBtn) loginBtn.style.display = 'block';
+                        if (logoutBtn) logoutBtn.style.display = 'none';
+                    }
+                },
+                loadUserData: function() {
+                    try {
+                        const saved = localStorage.getItem('arabHomeUser');
+                        if (saved) {
+                            this.currentUser = JSON.parse(saved);
+                            return this.currentUser;
+                        }
+                    } catch(e) {
+                        console.warn('Error loading user data:', e);
+                    }
+                    return null;
+                },
+                logout: function() {
+                    try {
+                        localStorage.removeItem('arabHomeUser');
+                        this.currentUser = null;
+                        this.updateUI();
+                        return true;
+                    } catch(e) {
+                        console.warn('Error logging out:', e);
+                        return false;
+                    }
+                }
+            };
+        </script>
+    <style>
+        :root {
+            --primary-color: #0a2d5e; /* أزرق داكن أنيق */
+            --secondary-color: #d4a762; /* ذهبي دافئ */
+            --accent-color: #2e7d5a; /* أخضر ازدهار */
+            --light-bg: #f8fafc;
+            --dark-text: #1e293b;
+            --light-text: #64748b;
+            --white: #ffffff;
+            --logo: #0054d3;
+            --logo-2: #d9db6b;
+            --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --border-radius: 12px;
+            --section-padding: 4.5rem 2rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0.85rem 2.2rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #1a4396);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(10, 45, 94, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(10, 45, 94, 0.35);
+            background: linear-gradient(135deg, #1a4396, var(--primary-color));
+        }
+
+
+        /* ========== Header ========== */
+        .main-header {
+            background-color: var(--white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 10px 10px 10px 10px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 9rem; /* كان 1rem */
+            position: relative;
+        }
+
+        .logo {         
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        .logo-img {
+            height: auto;
+            max-height: 70px;
+            width: auto;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .main-nav {
+            position: absolute;
+            left: 51%;
+            transform: translateX(-50%);
+            width: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .main-nav ul {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+            padding: 5;
+            margin: 3;
+        }
+
+        .main-nav li {
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .main-nav a {
+            font-weight: 600;
+            color: var(--dark-text);
+            position: relative;
+            padding: 0.4rem 0.5rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .main-nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background-color: var(--secondary-color);
+            bottom: -2px;
+            right: 0;
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+
+        .main-nav a:hover {
+            color: var(--primary-color);
+            text-decoration: none;
+            background-color: rgba(10, 45, 94, 0.05);
+        }
+
+        .main-nav a:hover::after {
+            width: 100%;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            min-width: 180px;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            left: 10%;
+        }
+
+        .user-welcome {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.85rem;
+            text-align: center;
+            white-space: nowrap;
+            padding: 0.7rem 2;
+            display: none;
+        }
+
+        .login-header-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            height: 32px;
+        }
+
+        .login-header-btn:hover {
+            background: #1a4396;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 45, 94, 0.2);
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.3rem 0.7rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            height: 32px;
+        }
+
+        .logout-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* إظهار الترحيب على الشاشات المتوسطة والكبيرة */
+        @media (min-width: 992px) {
+            .user-welcome {
+                display: block;
+            }
+        }
+
+        /* ===== Main Content ===== */
+        main {
+            min-height: calc(100vh - 200px);
+            padding: 3rem 1rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* ===== Sections ===== */
+        .add-property-section {
+            margin-bottom: 2.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(10, 45, 94, 0.1);
+        }
+
+        .section-title i {
+            color: var(--secondary-color);
+        }
+
+        /* ===== Purpose Buttons ===== */
+        .purpose-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .purpose-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 1.5rem 1rem;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .purpose-btn i {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .purpose-btn:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .purpose-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(10, 45, 94, 0.2);
+        }
+
+        /* ===== Category Section ===== */
+        .categories-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .category-card {
+            border: 2px solid #eee;
+            border-radius: var(--border-radius);
+            padding: 1.5rem 1rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .category-card:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-card.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .category-card i {
+            font-size: 2.2rem;
+            color: var(--secondary-color);
+        }
+
+        .category-card.selected i {
+            color: white;
+        }
+
+        .category-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        /* ===== Subcategories ===== */
+        .subcategories-section {
+            display: none;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .subcategories-section.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .subcategories-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .subcategory-btn {
+            padding: 1rem;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 1rem;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .subcategory-btn:hover {
+            border-color: var(--secondary-color);
+            background: #f9f9f9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .subcategory-btn.selected {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        /* ===== Selected Item ===== */
+        .selected-item {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a4396 100%);
+            padding: 1.8rem;
+            border-radius: var(--border-radius);
+            margin-top: 2rem;
+            border: none;
+            display: none;
+            box-shadow: 0 8px 25px rgba(10, 45, 94, 0.2);
+            color: white;
+        }
+
+        .selected-item.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .selection-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1.5rem;
+        }
+
+        .selection-details .info h3 {
+            color: white;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .selection-details .info p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .remove-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.7rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* ===== Submit Button ===== */
+        .submit-btn {
+            width: 100%;
+            padding: 1.3rem;
+            background: linear-gradient(135deg, var(--secondary-color), #e0b85c);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 6px 20px rgba(212, 167, 98, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #e0b85c, var(--secondary-color));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 167, 98, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* الفوتر - تنسيق أفقي للعناصر */
+        .main-footer {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 3rem 0 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 أعمدة متساوية */
+            gap: 5rem; /* كان 2.5rem */
+            margin-bottom: 3rem;
+            align-items: start;
+        }
+
+        .footer-column {
+            padding: 0 0.5rem;
+        }
+
+        .footer-column h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--secondary-color);
+            position: relative;
+            padding-bottom: 0.8rem;
+        }
+
+        .footer-column h4::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 35px;
+            height: 2px;
+            background-color: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        .footer-column ul {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0;
+        }
+
+        .footer-column a {
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--white);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .footer-column a:hover {
+            opacity: 1;
+            color: var(--secondary-color);
+            transform: translateX(-3px);
+            text-decoration: none;
+        }
+
+        .footer-column p {
+            opacity: 0.85;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1200px) {
+            .main-nav ul {
+                gap: 0.6rem;
+            }
+            
+            .user-menu {
+                min-width: 160px;
+            }
+            
+            .footer-grid {
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 0.8rem;
+                justify-content: space-between;
+                position: relative;
+            }
+
+            .logo {
+                order: 1;
+                min-width: 110px;
+                flex: 1;
+            }
+
+            .logo-img {
+                max-height: 50px;
+                max-width: 110px;
+            }
+
+            .user-menu {
+                order: 2;
+                min-width: auto;
+                justify-content: flex-end;
+                flex: 1;
+            }
+
+            .main-nav {
+                order: 3;
+                position: static;
+                transform: none;
+                width: 100%;
+                margin-top: 0.8rem;
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+
+            .main-nav ul {
+                justify-content: flex-start;
+                flex-wrap: nowrap;
+                gap: 0.6rem;
+                padding-bottom: 0.5rem;
+                width: 100%;
+            }
+            
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr); /* عمودين للشاشات المتوسطة */
+                gap: 2.5rem;
+            }
+            
+            .user-welcome {
+                display: none;
+            }
+            
+            .categories-container {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .subcategories-container {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-header {
+                padding: 0.5rem 0;
+            }
+
+            .header-content {
+                gap: 0.5rem;
+            }
+
+            .logo-img {
+                max-height: 45px;
+                max-width: 100px;
+            }
+
+            .main-nav ul {
+                gap: 0.4rem;
+            }
+
+            .main-nav a {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.4rem;
+                gap: 0.2rem;
+            }
+
+            .user-menu {
+                flex-direction: row;
+                gap: 0.5rem;
+                align-items: center;
+                min-width: auto;
+            }
+
+            .login-header-btn,
+            .logout-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+                height: 28px;
+            }
+
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .purpose-buttons {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .purpose-btn {
+                min-width: 100%;
+            }
+
+            .categories-container {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 0.8rem;
+            }
+
+            .subcategories-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 0.8rem;
+            }
+
+            .selection-details {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr; /* عمود واحد للشاشات الصغيرة */
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-nav ul {
+                gap: 0.3rem;
+            }
+
+            .main-nav a {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.3rem;
+            }
+
+            .logo-img {
+                max-height: 40px;
+                max-width: 90px;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .categories-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+
+            .subcategories-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+            
+            .user-menu {
+                gap: 0.3rem;
+            }
+            
+            .login-header-btn,
+            .logout-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+                height: 26px;
+            }
+            
+            .footer-column {
+                padding: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-nav ul {
+                gap: 0.2rem;
+            }
+            
+            .main-nav a {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.25rem;
+            }
+            
+            .categories-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .subcategories-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-column h4 {
+                font-size: 1rem;
+            }
+            
+            .footer-column a {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+        <!-- Header -->
+        <header class="main-header">
+            <div class="container header-content">
+                <a href="#" class="logo">
+                    <img src="images/logo.png" alt="arab HOME Logo" class="logo-img">
+                </a>
+                
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="index.html"><i class="fas fa-home"></i> الرئيسية</a></li>
+                        <li><a href="#"><i class="fas fa-user-tie"></i> المديرين</a></li>
+                        <li><a href="#"><i class="fas fa-bullhorn"></i> الرعاية والإعلانات</a></li>
+                        <li><a href="#"><i class="fas fa-map-marked-alt"></i> خريطة الموقع</a></li>
+                        <li><a href="offers.html" id="offersLink"><i class="fas fa-rocket"></i> طروحات</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="user-menu">
+                    <span class="user-welcome" id="userWelcome">مرحباً بك في ARAB HOME</span>
+                    <button class="login-header-btn" id="loginHeaderBtn">
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                    </button>
+                    <button class="logout-btn" id="logoutBtn" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+    <!-- ===== Main Content ===== -->
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="fas fa-home"></i> إضافة عقار جديد</h1>
+                <p>اختر نوع العقار الذي ترغب في إضافته إلى المنصة</p>
+            </div>
+
+            <!-- الخطوة 1: اختيار الغرض -->
+            <section class="add-property-section">
+                <h2 class="section-title"><i class="fas fa-bullseye"></i> الخطوة الأولى: اختر الغرض</h2>
+                <div class="purpose-buttons">
+                    <button type="button" class="purpose-btn" data-purpose="sale">
+                        <i class="fas fa-tag"></i>
+                        للبيع
+                    </button>
+                    <button type="button" class="purpose-btn" data-purpose="rent">
+                        <i class="fas fa-key"></i>
+                        للإيجار
+                    </button>
+                </div>
+            </section>
+
+            <!-- الخطوة 2: اختيار القسم -->
+            <section class="add-property-section" id="categorySection">
+                <h2 class="section-title"><i class="fas fa-th-large"></i> الخطوة الثانية: اختر القسم</h2>
+                <div class="categories-container" id="categoriesContainer">
+                    <!-- سيتم ملؤه ديناميكياً -->
+                </div>
+            </section>
+
+            <!-- الخطوة 3: اختيار التفريعة -->
+            <section class="add-property-section" id="subcategoriesSection">
+                <h2 class="section-title"><i class="fas fa-list-ul"></i> الخطوة الثالثة: اختر التفريعة</h2>
+                <div class="subcategories-container" id="subcategoriesContainer">
+                    <!-- سيتم ملؤه ديناميكياً -->
+                </div>
+            </section>
+
+            <!-- العنصر المحدد -->
+            <div class="selected-item" id="selectedItem">
+                <div class="selection-details">
+                    <div class="info">
+                        <h3><i class="fas fa-check-circle"></i> تم الاختيار</h3>
+                        <p id="selectedDetails">لم يتم اختيار أي شيء بعد</p>
+                    </div>
+                    <button type="button" class="remove-btn" id="removeBtn">
+                        <i class="fas fa-times"></i> إزالة الاختيار
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                <i class="fas fa-plus-circle"></i> تأكيد الاختيار والمتابعة
+            </button>
+        </div>
+    </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-column">
+                        <h4>عن ARAB HOME</h4>
+                        <p style="opacity: 0.85; margin-bottom: 1.2rem; line-height: 1.5;">المنصة العقارية الرائدة التي تربط بين البائعين والمشترين بثقة وشفافية منذ 2023.</p>
+                    </div>
+                    <div class="footer-column">
+                        <h4>روابط سريعة</h4>
+                        <ul>
+                            <li><a href="#"><i class="fas fa-chevron-left"></i> الشروط والأحكام</a></li>
+                            <li><a href="#"><i class="fas fa-chevron-left"></i> سياسة الخصوصية</a></li>
+                            <li><a href="#"><i class="fas fa-chevron-left"></i> الأسئلة الشائعة</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>التصنيفات</h4>
+                        <ul>
+                            <li><a href="#"><i class="fas fa-chevron-left"></i> شقق للبيع في القاهرة</a></li>
+                            <li><a href="#"><i class="fas fa-chevron-left"></i> فلل للبيع في الجيزة</a></li>
+                            <li><a href="#"><i class="fas fa-chevron-left"></i> محلات للايجار</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>اتصل بنا</h4>
+                        <ul>
+                            <li>
+                            <a href="https://wa.me/201119991216?text=مرحباً، أريد الاستفسار عن الخدمات التي تقدمونها" target="_blank">
+                                <i class="fas fa-phone"></i>01119991216
+                            </a>
+                            </li>                       
+                            <li>
+                            <a href="https://wa.me/201000859492" target="_blank">
+                                <i class="fas fa-phone"></i>01000859492
+                            </a>
+                            </li>  
+                            <li><a href="mailto:arab-home@mail.com"><i class="fas fa-envelope"></i>arab-home@mail.com</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>© 2025 <strong>ARAB HOME</strong>. جميع الحقوق محفوظة.</p>
+                </div>
+            </div>
+        </footer>
+
+    <script>
+        // ===== بيانات الأقسام والتفريعات =====
+        const categoriesData = {
+            sale: [
+                {
+                    name: 'أراضي ومزارع للبيع',
+                    icon: 'fas fa-building',
+                    subcategories: ['مزارع سمكية ودواجن وعجول للبيع', 'غرفة واحدة', 'أراضي منتجة ومزارع مثمرة للبيع', 'أراضي فضاء للبيع', 'أراضي استصلاح زراعي للبيع']
+                },
+                {
+                    name: 'عقارات إدارية',
+                    icon: 'fas fa-home',
+                    subcategories: ['مكاتب ومقرات إدارية للبيع', 'مباني إدارية للبيع']
+                },
+                {
+                    name: 'عقارات تجارية',
+                    icon: 'fas fa-vector-square',
+                    subcategories: ['مطاعم وكفيهات للبيع','مخازن للبيع', 'محلات وتجاري للبيع', 'فنادق ومنتجعات سياحية للبيع', 'بنايات تجارية ومولات للبيع']
+                },
+                {
+                    name: 'عقارات تعليمية',
+                    icon: 'fas fa-store',
+                    subcategories: ['مراكز تعليم للبيع','مدارس للبيع', 'حضانات للبيع', 'جامعة للبيع', 'أراضي تعليمية للبيع']
+                },
+                {
+                    name: 'عقارات سكنية',
+                    icon: 'fas fa-briefcase',
+                    subcategories: ['فلل مستقله للبيع','فلل توين هاوس للبيع','فلل تاون هاوس للبيع','عمارات ومنازل للبيع', 'شقق للبيع', 'ستوديو للبيع', 'دوبلكس للبيع']
+                },
+                {
+                    name: 'عقارات صناعية',
+                    icon: 'fas fa-warehouse',
+                    subcategories: ['مصانع للبيع', 'أراضي صناعية للبيع']
+                },
+                {
+                    name: 'عقارات متنوعة',
+                    icon: 'fas fa-hotel',
+                    subcategories: ['مدافن ومقابر وأحواش للبيع','محطة بنزين للبيع', 'عقارات دولية خارج مصر', 'عقارات أخرى', 'جراج للبيع']
+                },
+                {
+                    name: 'عقارات مصيفية',
+                    icon: 'fas fa-project-diagram',
+                    subcategories: ['فلل مصيف للبيع', 'شقق مصيفية للبيع', 'شاليهات للبيع', 'تايم شير للبيع']
+                },
+                {
+                    name: 'عقارات طبية',
+                    icon: 'fas fa-city',
+                    subcategories: ['مستشفيات للبيع','مراكز طبية للبيع', 'مخازن أدوية للبيع', 'عيادات للبيع', 'صيدليات للبيع']
+                },
+                {
+                    name: 'مشاريع جديدة',
+                    icon: 'fas fa-ellipsis-h',
+                    subcategories: ['مشاريع عقارية']
+                }
+            ],
+            rent: [
+                {
+                    name: 'أراضي ومزارع للايجار',
+                    icon: 'fas fa-building',
+                    subcategories: ['أراضي فضاء للايجار', 'أراضي زراعية ومزارع للايجار']
+                },
+                {
+                    name: 'عقارات إدارية',
+                    icon: 'fas fa-home',
+                    subcategories: ['مكاتب ومقرات إدارية للإيجار', 'مباني إدارية للايجار', 'غرفة في مكتب للإيجار']
+                },
+                {
+                    name: 'عقارات تجارية',
+                    icon: 'fas fa-vector-square',
+                    subcategories: ['ورش للايجار','مغسلة سيارات للايجار','مطاعم وكافيهات للايجار', 'مخازن للايجار', 'محلات وتجاري للإيجار', 'بنايات تجارية ومولات للإيجار']
+                },
+                {
+                    name: 'عقارات تعليمية',
+                    icon: 'fas fa-store',
+                    subcategories: ['مدارس للايجار', 'قاعات ومراكز تعليم للايجار', 'حضانات للايجار']
+                },
+                {
+                    name: 'عقارات سكنية',
+                    icon: 'fas fa-briefcase',
+                    subcategories: ['فلل مستقلة للايجار','فلل توين هاوس للايجار','فلل تاون هاوس للإيجار','غرف للإيجار','عمارات ومنازل للإيجار','شقق مفروشة للإيجار', 'شقق إيجار جديد', 'ستوديو للايجار', 'دوبلكس للإيجار']
+                },
+                {
+                    name: 'عقارات صناعية',
+                    icon: 'fas fa-warehouse',
+                    subcategories: ['مصانع للايجار', 'أراضي صناعية للايجار']
+                },
+                {
+                    name: 'عقارات متنوعة',
+                    icon: 'fas fa-couch',
+                    subcategories: ['محطة بنزين للايجار', 'عقارات أخرى', 'حدائق وقاعات افراح ومناسبات للايجار', 'جراج للايجار']
+                },
+                {
+                    name: 'عقارات مصيفية',
+                    icon: 'fas fa-umbrella-beach',
+                    subcategories: ['فلل مصيف للايجار', 'شقق مصيف للايجار', 'شاليهات للايجار', 'تايم شير للايجار']
+                },
+                {
+                    name: 'عقارات طبية',
+                    icon: 'fas fa-door-closed',
+                    subcategories: ['مستشفيات للايجار','مراكز طبية للايجار', 'مخازن أدوية للايجار', 'عيادات للايجار', 'صيدليات للايجار']
+                },
+                {
+                    name: 'مشاريع جديدة',
+                    icon: 'fas fa-ellipsis-h',
+                    subcategories: ['مشاريع عقارية']
+                }
+            ]
+        };
+
+        // ===== متغيرات الحالة =====
+        let selectedPurpose = null;
+        let selectedCategory = null;
+        let selectedSubcategory = null;
+
+        // ===== DOM Elements =====
+        const purposeButtons = document.querySelectorAll('.purpose-btn');
+        const categorySection = document.getElementById('categorySection');
+        const categoriesContainer = document.getElementById('categoriesContainer');
+        const subcategoriesSection = document.getElementById('subcategoriesSection');
+        const subcategoriesContainer = document.getElementById('subcategoriesContainer');
+        const selectedItemDiv = document.getElementById('selectedItem');
+        const selectedDetailsSpan = document.getElementById('selectedDetails');
+        const removeBtn = document.getElementById('removeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // ===== Event Listeners =====
+        purposeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // إزالة التحديد من جميع الأزرار
+                purposeButtons.forEach(b => b.classList.remove('active'));
+                
+                // تحديد الزر الحالي
+                btn.classList.add('active');
+                selectedPurpose = btn.dataset.purpose;
+                
+                // عرض الأقسام المناسبة
+                displayCategories();
+                
+                // إعادة تعيين البيانات
+                resetSelection();
+            });
+        });
+
+        removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetSelection();
+        });
+
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!selectedSubcategory) {
+                alert('يرجى اختيار تفريعة');
+                return;
+            }
+            
+            // إظهار رسالة النجاح
+            showSuccessMessage();
+        });
+
+        // ===== الدوال =====
+        function displayCategories() {
+            if (!selectedPurpose) return;
+            
+            categoriesContainer.innerHTML = '';
+            
+            categoriesData[selectedPurpose].forEach((category, index) => {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.dataset.index = index;
+                
+                card.innerHTML = `
+                    <i class="${category.icon}"></i>
+                    <h3>${category.name}</h3>
+                `;
+                
+                card.addEventListener('click', () => {
+                    // إزالة التحديد من جميع البطاقات
+                    document.querySelectorAll('.category-card').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    
+                    // تحديد البطاقة الحالية
+                    card.classList.add('selected');
+                    selectedCategory = index;
+                    
+                    // عرض التفريعات
+                    displaySubcategories();
+                });
+                
+                categoriesContainer.appendChild(card);
+            });
+        }
+
+        function displaySubcategories() {
+            if (selectedCategory === null) return;
+            
+            const category = categoriesData[selectedPurpose][selectedCategory];
+            subcategoriesContainer.innerHTML = '';
+            
+            category.subcategories.forEach((subcat, index) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'subcategory-btn';
+                btn.textContent = subcat;
+                
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // إزالة التحديد من جميع الأزرار
+                    document.querySelectorAll('.subcategory-btn').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    
+                    // تحديد الزر الحالي
+                    btn.classList.add('selected');
+                    selectedSubcategory = subcat;
+                    
+                    // عرض العنصر المحدد
+                    displaySelectedItem();
+                    
+                    // تفعيل زر التأكيد
+                    submitBtn.disabled = false;
+                });
+                
+                subcategoriesContainer.appendChild(btn);
+            });
+            
+            // إظهار قسم التفريعات
+            subcategoriesSection.classList.add('active');
+        }
+
+        function displaySelectedItem() {
+            const category = categoriesData[selectedPurpose][selectedCategory];
+            const purposeText = selectedPurpose === 'sale' ? 'للبيع' : 'للإيجار';
+            
+            selectedDetailsSpan.textContent = 
+                `${purposeText} - ${category.name} - ${selectedSubcategory}`;
+            
+            selectedItemDiv.classList.add('show');
+        }
+
+        function resetSelection() {
+            // إعادة تعيين المتغيرات
+            selectedCategory = null;
+            selectedSubcategory = null;
+            
+            // إزالة التحديد من البطاقات
+            document.querySelectorAll('.category-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+            
+            // إزالة التحديد من التفريعات
+            document.querySelectorAll('.subcategory-btn').forEach(b => {
+                b.classList.remove('selected');
+            });
+            
+            // إخفاء قسم التفريعات والعنصر المحدد
+            subcategoriesSection.classList.remove('active');
+            selectedItemDiv.classList.remove('show');
+            
+            // تعطيل زر التأكيد
+            submitBtn.disabled = true;
+        }
+
+        function showSuccessMessage() {
+            const category = categoriesData[selectedPurpose][selectedCategory];
+            const purposeText = selectedPurpose === 'sale' ? 'للبيع' : 'للإيجار';
+            
+            Swal.fire({
+                title: 'تم الحفظ بنجاح!',
+                html: `
+                    <div style="text-align: right; padding: 1rem;">
+                        <h3 style="color: #0a2d5e; margin-bottom: 1rem;">تفاصيل العقار:</h3>
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px;">
+                            <p style="margin: 0.5rem 0;"><strong>الغرض:</strong> ${purposeText}</p>
+                            <p style="margin: 0.5rem 0;"><strong>القسم:</strong> ${category.name}</p>
+                            <p style="margin: 0.5rem 0;"><strong>التفريعة:</strong> ${selectedSubcategory}</p>
+                        </div>
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: 'متابعة',
+                confirmButtonColor: '#0a2d5e'
+            });
+        }
+
+        // ===== نظام تسجيل الدخول =====
+        const userWelcome = document.getElementById('userWelcome');
+        const loginBtn = document.getElementById('loginHeaderBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        function updateUserUI() {
+            // تحديث واجهة المستخدم بناءً على حالة تسجيل الدخول
+            const userData = authSystem.loadUserData();
+            if (userData) {
+                userWelcome.textContent = `مرحباً، ${userData.name || userData.email.split('@')[0]}!`;
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'block';
+            } else {
+                userWelcome.textContent = 'مرحباً بك في ARAB HOME';
+                if (loginBtn) loginBtn.style.display = 'block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
+            }
+        }
+
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                authSystem.showLoginModal();
+            });
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                authSystem.logout();
+                updateUserUI();
+            });
+        }
+
+        // تحديث واجهة المستخدم عند التحميل
+        document.addEventListener('DOMContentLoaded', async function() {
+            // تهيئة نظام المصادقة
+            if (window.authSystem && typeof window.authSystem.initialize === 'function') {
+                await window.authSystem.initialize();
+            }
+            updateUserUI();
+        });
+        
+        // إضافة SweetAlert للرسائل الجميلة
+        if (typeof Swal === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+            document.head.appendChild(script);
+        }
+    </script>
+
+    <!-- تحميل ملفات JavaScript -->
+    <script src="js/auth.js"></script>
+    <script src="js/init.js"></script>
+</body>
+</html>
